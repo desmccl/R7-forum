@@ -4,7 +4,7 @@ Questions for Lesson 7
 before some or all of the controller actions execute?  Where can you put that
 change so that it affects all controllers?
 
-
+The method you put in the top of the controller is the before_action method. You place this in the Applicationcontroller to apply it to all controllers.
 
 2. Consider the following statement:
 
@@ -14,13 +14,13 @@ This creates several files, including two you need to know about.  What are they
 After you do this statement but before starting the rails server, you have to do another
 command.  What is that command?
 
-
+The two files are the migration and model files. After running this, the database migration (bin/rails db:migrate) command should be run.
 
 3. What table is created as a result of the migration described above? What are the column
 names in that table? What is the primary key? What are the foreign keys?  What does a 
 foreign key do?
 
-
+The subscriptions table is created with the forum, user, and priority columns. Rails will create a primary key called id. The foreign keys are forum_id and user_id. A foreign key creates a link bewteen two tables.
 
 4. You have the following lines in the Subscription model:
 
@@ -32,7 +32,7 @@ that if you have a @subscription (an instance of Subscription), you have a coupl
 used to refer to associated database methods.  What are those methods?  (Actually there are a few,
 but there are two in particular you should know.)
 
-
+These two methods are the Association Accessor Method and the Association Setter Method.
 
 5. You have the following lines in the User model.
 
@@ -40,10 +40,10 @@ has_many :subscriptions
 has_many :posts
 has_many :forums, through: :subscriptions
 
-What are threee important methods that are available to instances of the user model because
+What are three important methods that are available to instances of the user model because
 of these lines?
 
-
+Association Collection Method, Association Builder Method, and Association Creation Method.
 
 6. Suppose that user is an instance of the User class. What kind of object is returned by
 user.subcriptions?  Hint: To find out, go into the Rails console for your application.
@@ -67,13 +67,15 @@ Try that last line.  You will see that it creates a subscription object, but tha
 object is not entirely empty.  Which attribute is set? Where does it get that
 value?
 
-
+The user_id is set to 1. This comes from the id of the user instance.
 
 7. Suppose that user is an instance of User, and forum is an instance of Forum.  What
 Active Record Statement could you use to retrieve all the user's posts for that
 forum?  Hint: You need to have a where in your statement. Try this out in the console.
 You will see the SQL that is executed logged to the screen.  What is that SQL?
 
+This is the SQL that is logged to the screen:  SELECT "posts".* FROM "posts" WHERE "posts"."user_id" = ? AND "posts"."forum_id" = ?  [["user_id", 1], ["forum_id", 1]]
+I used this statement: user_posts_in_forum = Post.where(user_id: user.id, forum_id: forum.id)
 
 
 8. You have the following method in your posts controller:
@@ -87,19 +89,43 @@ You will see the SQL that is executed logged to the screen.  What is that SQL?
 There is a security exposure, a risk that a hacker could do damage.  What is that
 risk? What two things are done in your code to prevent the risk?
 
+Any user could delete posts they did not create. To avoid this, two things could be done. First we could add code to find the post in a secure way. Second, we add code to handle unauthorized access.
 
+The revised code would be:
+
+def destroy
+  @post = current_user.posts.find(params[:id]) # Ensures the post belongs to the current user #find post securely
+  @forum = @post.forum
+  @post.destroy
+  redirect_to @forum, notice: "Your post was deleted."
+rescue ActiveRecord::RecordNotFound #handle unauthorized access
+  redirect_to forums_path, alert: "You are not authorized to delete this post."
+end
 
 9. The routes for subscriptions are nested under the forum routes.  How does this
 change the routes?  What is the additional hash key and value that is passed in the
 params hash to the subscriptions controller as a result of this nesting? Which routes
 are unaffected by the nesting?
 
+This creates routes scoped to a specific forum. The added hash key and value is forum_id and id. 
+Unested routes would not be affected are: 
+GET /forums (index)
+POST /forums (create)
+GET /forums/:id (show)
+PATCH/PUT /forums/:id (update)
+DELETE /forums/:id (destroy)
 
+and
 
+GET /subscriptions (index)
+POST /subscriptions (create)
+GET /subscriptions/:id (show)
+PATCH/PUT /subscriptions/:id (update)
+DELETE /subscriptions/:id (destroy)
 
 10. Every action method must do exactly one of two things -- that is, each
 method may do all sorts of logic, but at the end, it has to do one of two
 things, depending on the outcome of the logic.  What are those two things?
 
-
+The two things are redirect to another action or url and render a view.
 
