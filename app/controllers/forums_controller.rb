@@ -49,11 +49,16 @@ class ForumsController < ApplicationController
 
   # DELETE /forums/1 or /forums/1.json
   def destroy
-    @forum.destroy
-
-    respond_to do |format|
-      format.html { redirect_to forums_url, notice: "Forum was successfully destroyed." }
-      format.json { head :no_content }
+    if @forum.destroy
+      respond_to do |format|
+        format.html { redirect_to forums_url, notice: "Forum was successfully destroyed." }
+        format.json { head :no_content }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to forums_url, notice: "Cannot delete forum with associated posts" }
+        format.json { head :no_content }
+      end
     end
   end
 
